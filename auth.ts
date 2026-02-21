@@ -2,7 +2,7 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@/generated/prisma/client'
+import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 const connectionString = process.env.DATABASE_URL!
@@ -84,7 +84,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         async session({ session, token }) {
             if (token && session.user) {
-                session.user.role = token.role as string
+                session.user.role = token.role as Role
                 session.user.id = token.id as string
                 session.user.firstLogin = token.firstLogin as boolean
             }

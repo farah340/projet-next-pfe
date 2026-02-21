@@ -1,6 +1,6 @@
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient, Role } from '../src/generated/prisma/client'
+import { PrismaClient, Role } from '@prisma/client/index'
 import bcrypt from 'bcrypt'
 import * as readline from 'readline'
 

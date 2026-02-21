@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '../../../../../auth'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@/generated/prisma/client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 export const runtime = "nodejs";
 
@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
         })
 
         return NextResponse.json(
-            { message: 'Mot de passe changé avec succès' },
+            { 
+                message: 'Mot de passe changé avec succès',
+                requiresRefresh: true  // Indiquer que la session doit être rafraîchie
+            },
             { status: 200 }
         )
     } catch (error) {

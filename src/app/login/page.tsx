@@ -16,23 +16,35 @@ export default function LoginPage() {
         e.preventDefault()
         setError('')
         setLoading(true)
-
+        const admin = searchParams.get('admin')
+       const firstLogin = searchParams.get('firstLogin')
         try {
             const result = await signIn('credentials', {
                 email,
                 password,
                 redirect: false,
             })
+           
 
             if (result?.error) {
-                setError('Email ou mot de passe incorrect')
+               setError("Email ou mot de passe incorrect")
             } else {
-                // Connexion réussie - rediriger vers dashboard
-                router.push('/dashboard')
-                router.refresh()
+                if(firstLogin){
+                    router.push('/change-password')
+                    router.refresh()
+                }else{
+                if (admin) {
+                    router.push('/admin')
+                    router.refresh()
+                } else {
+                    // Connexion réussie - rediriger vers dashboard
+                    router.push('/dashboard')
+                    router.refresh()
+                }}
             }
         } catch (error) {
             setError('Une erreur est survenue')
+
         } finally {
             setLoading(false)
         }

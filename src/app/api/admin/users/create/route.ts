@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '../../../../../../auth'
+import { auth } from '@/lib/auth'
+import bcrypt from 'bcrypt'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client/index'
-import bcrypt from 'bcrypt'
+import { PrismaClient } from '@prisma/client'
 
 const connectionString = process.env.DATABASE_URL!
 const pool = new Pool({ connectionString })
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
                 telephone: telephone || null,
                 password: hashedPassword,
                 role: role || 'USER',
-                firstLogin: true,  // Force le changement de mot de passe
+                firstLogin: true,
             },
             select: {
                 id: true,

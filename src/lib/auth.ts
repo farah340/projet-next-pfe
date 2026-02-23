@@ -2,7 +2,7 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient, Role } from '@prisma/client'
+import { PrismaClient, Role } from '@prisma/client/index'
 import bcrypt from 'bcrypt'
 
 const connectionString = process.env.DATABASE_URL!

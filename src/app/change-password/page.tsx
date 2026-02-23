@@ -1,6 +1,7 @@
-import { auth } from '../../../auth'
+import { auth } from '../../lib/auth'
 import { redirect } from 'next/navigation'
 import ChangePasswordForm from './ChangePasswordForm'
+
 
 export default async function ChangePasswordPage() {
     const session = await auth()
@@ -9,5 +10,10 @@ export default async function ChangePasswordPage() {
         redirect('/login')
     }
 
-    return <ChangePasswordForm userEmail={session.user.email!} />
+    return (
+
+        <div className="min-h-screen bg-gray-100" >
+            <ChangePasswordForm userEmail={session.user.email!} />
+        </div>
+    )
 }

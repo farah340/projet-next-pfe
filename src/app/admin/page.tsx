@@ -6,10 +6,7 @@ import Link from 'next/link'
 export default async function AdminPage() {
     const session = await requireAdmin()
 
-    // Rediriger si première connexion
-    if (session.user.firstLogin) {
-        redirect('/change-password')
-    }
+   
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
@@ -43,15 +40,17 @@ export default async function AdminPage() {
                             </div>
                         </Link>
 
-                        <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
-                            <h3 className="font-semibold mb-2">👥 Gérer les utilisateurs</h3>
-                            <p className="text-gray-600 text-sm mb-3">
-                                Voir, modifier, supprimer les utilisateurs
-                            </p>
-                            <button className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 w-full">
-                                Accéder
-                            </button>
-                        </div>
+                        <Link href="/admin/users">
+                            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
+                                <h3 className="font-semibold mb-2">👥 Gérer les utilisateurs</h3>
+                                <p className="text-gray-600 text-sm mb-3">
+                                    Voir, modifier, supprimer les utilisateurs
+                                </p>
+                                <div className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 w-full text-center">
+                                    Accéder
+                                </div>
+                            </div>
+                        </Link>
 
                         <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
                             <h3 className="font-semibold mb-2">📊 Statistiques globales</h3>

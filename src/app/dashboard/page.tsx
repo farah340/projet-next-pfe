@@ -1,10 +1,17 @@
 import { requireAuth } from '@/lib/authutils'
 import { redirect } from 'next/navigation'
 import LogoutButton from '@/components/LogoutButton'
-
+import { isAdmin } from '@/lib/authutils'
+import { requireAdmin } from '@/lib/authutils'
 export default async function DashboardPage() {
-    try {
+    
         const session = await requireAuth()
+        if (session.user.role === 'ADMIN') {
+            redirect('/admin')
+        }
+        if (session.user.firstLogin) {
+            redirect('/change-password')
+        }
 
         // Rediriger si première connexion (temporairement désactivé pour tester)
         // if (session.user.firstLogin) {
@@ -99,8 +106,5 @@ export default async function DashboardPage() {
                 </div>
             </div>
         )
-    } catch (error) {
-        console.error('Dashboard error:', error)
-        redirect('/login')
-    }
+    
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import LogoutButton  from '@/components/LogoutButton'
 
 interface ChangePasswordFormProps {
     userEmail: string
@@ -64,10 +65,13 @@ export default function ChangePasswordForm({ userEmail }: ChangePasswordFormProp
             setLoading(false)
         }
     }
-
+    
     return (
         <div className="min-h-screen bg-gray-100 flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+                <div className="flex justify-end mb-4">
+                    <LogoutButton />
+                </div>
                 <h1 className="text-2xl font-bold mb-6 text-center">
                     Changer votre mot de passe
                 </h1>

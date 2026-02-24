@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-
+import  Retour   from '@/components/Retour'
 export type EditableUser = {
     id: string
     email: string
@@ -67,19 +67,14 @@ export default function EditUserForm({ user }: { user: EditableUser }) {
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
+            <Retour/>
             <div className="max-w-2xl mx-auto">
                 <div className="mb-6">
-                    <button
-                        type="button"
-                        onClick={() => router.push('/admin/users')}
-                        className="text-blue-600 hover:underline flex items-center gap-2"
-                    >
-                        ← Retour à la liste
-                    </button>
+                    
                 </div>
 
                 <div className="bg-white rounded-lg shadow-md p-8">
-                    <h1 className="text-3xl font-bold mb-6">Modifier un utilisateur</h1>
+                    <h1 className="text-3xl font-bold mb-6 text-black">Modifier un utilisateur</h1>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
@@ -154,9 +149,9 @@ export default function EditUserForm({ user }: { user: EditableUser }) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                             className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-900 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                         >
-                            {loading ? '⏳ Enregistrement...' : '💾 Enregistrer'}
+                            {loading ? '⏳ Enregistrement...' : 'Enregistrer'}
                         </button>
                     </form>
                 </div>

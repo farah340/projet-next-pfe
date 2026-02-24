@@ -13,12 +13,12 @@ export default async function AdminPage() {
             <div className="max-w-6xl mx-auto">
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold">Dashboard Administrateur</h1>
+                        <h1 className="text-3xl font-bold text-black">Dashboard Administrateur</h1>
                         <LogoutButton />
                     </div>
 
                     <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-                        <h2 className="text-xl font-semibold mb-2">Panneau Admin</h2>
+                        <h2 className="text-xl font-semibold mb-2 text-black">Panneau Admin</h2>
                         <p className="text-gray-700">
                             Connecté en tant que : <strong>{session.user.email}</strong>
                         </p>
@@ -30,7 +30,7 @@ export default async function AdminPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Link href="/admin/users/create">
                             <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
-                                <h3 className="font-semibold mb-2">➕ Créer un utilisateur</h3>
+                                <h3 className="font-semibold mb-2 text-black">➕ Créer un utilisateur</h3>
                                 <p className="text-gray-600 text-sm mb-3">
                                     Ajouter un nouveau compte utilisateur
                                 </p>
@@ -42,7 +42,7 @@ export default async function AdminPage() {
 
                         <Link href="/admin/users">
                             <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
-                                <h3 className="font-semibold mb-2">👥 Gérer les utilisateurs</h3>
+                                <h3 className="font-semibold mb-2 text-black">👥 Gérer les utilisateurs</h3>
                                 <p className="text-gray-600 text-sm mb-3">
                                     Voir, modifier, supprimer les utilisateurs
                                 </p>
@@ -53,7 +53,7 @@ export default async function AdminPage() {
                         </Link>
 
                         <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition cursor-pointer">
-                            <h3 className="font-semibold mb-2">📊 Statistiques globales</h3>
+                            <h3 className="font-semibold mb-2 text-black">📊 Statistiques globales</h3>
                             <p className="text-gray-600 text-sm mb-3">
                                 Voir les stats de la plateforme
                             </p>

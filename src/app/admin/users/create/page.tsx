@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-
+import  Retour   from '@/components/Retour'
+import { IoCreateOutline } from "react-icons/io5";
+import { RiAiGenerate } from "react-icons/ri";
 export default function CreateUserPage() {
     const [email, setEmail] = useState('')
     const [nom, setNom] = useState('')
@@ -80,106 +82,115 @@ Note : Vous devrez changer ce mot de passe à votre première connexion.`
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-2xl mx-auto">
-                <div className="mb-6">
-                    <button
-                        onClick={() => router.push('/admin')}
-                        className="text-blue-600 hover:underline flex items-center gap-2"
-                    >
-                        ← Retour au dashboard
-                    </button>
+        <div className="min-h-screen bg-gray-100">
+           <Retour />
+            <div className="max-w-6xl mx-auto px-6 py-10">
+                <div className="flex items-start gap-4 mb-8">
+                    <div className="h-14 w-14 rounded-xl bg-green-800 shadow flex items-center justify-center text-white text-2xl">
+                        <IoCreateOutline className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-bold text-black leading-tight">Créer un utilisateur</h1>
+                        <p className="text-gray-600">Ajouter un nouveau compte à la plateforme</p>
+                    </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <h1 className="text-3xl font-bold mb-6">Créer un Utilisateur</h1>
-
+                <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email *
-                            </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="utilisateur@exemple.com"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-black mb-2">
+                                    Nom complet <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={nom}
+                                    onChange={(e) => setNom(e.target.value)}
+                                    required
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black placeholder:text-gray-400"
+                                    placeholder="Prénom Nom"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-black mb-2">
+                                    Ajouter un email <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black placeholder:text-gray-400"
+                                />
+                            </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nom complet *
-                            </label>
-                            <input
-                                type="text"
-                                value={nom}
-                                onChange={(e) => setNom(e.target.value)}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Prénom Nom"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Téléphone
-                            </label>
+                            <label className="block text-sm font-semibold text-black mb-2">Numéro de téléphone</label>
                             <input
                                 type="tel"
                                 value={telephone}
                                 onChange={(e) => setTelephone(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black placeholder:text-gray-400"
                                 placeholder="+216 12 345 678"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Mot de passe temporaire *
+                            <label className="block text-sm font-semibold text-black mb-2">
+                                Rôle <span className="text-red-600">*</span>
                             </label>
-                            <div className="flex gap-2">
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black"
+                            >
+                                <option value="USER">Utilisateur</option>
+                                <option value="ADMIN">Administrateur</option>
+                            </select>
+                        </div>
+
+                        <div className="border-t border-gray-200 pt-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <h2 className="text-xl font-bold text-black">Mot de passe temporaire</h2>
+                                <span className="inline-flex items-center justify-center h-6 w-6 rounded bg-yellow-100 text-yellow-700 text-sm">
+                                    
+                                </span>
+                            </div>
+
+                            <label className="block text-sm font-semibold text-black mb-2">
+                                Mot de passe <span className="text-red-600">*</span>
+                            </label>
+
+                            <div className="flex flex-col md:flex-row gap-3">
                                 <input
                                     type="text"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                                    placeholder="••••••••••••"
+                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black placeholder:text-gray-400"
+                                    placeholder="Entrez un mot de passe"
                                 />
                                 <button
                                     type="button"
                                     onClick={generatePassword}
-                                    className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition whitespace-nowrap"
+                                    className="px-6 py-3 rounded-lg bg-yellow-700 text-white hover:bg-yellow-800 transition font-semibold whitespace-nowrap flex items-center gap-2"
                                 >
-                                    🎲 Générer
+                                    <RiAiGenerate className="h-5 w-5" />
+                                    Générer
                                 </button>
                             </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                                💡 L'utilisateur devra changer ce mot de passe à sa première connexion
-                            </p>
-                        </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Rôle *
-                            </label>
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                <option value="USER">👤 Utilisateur</option>
-                                <option value="ADMIN">👑 Administrateur</option>
-                            </select>
+                            <div className="mt-4 bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg">
+                                L'utilisateur devra changer ce mot de passe lors de sa première connexion
+                            </div>
                         </div>
 
                         {error && (
                             <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
-                                ❌ {error}
+                                {error}
                             </div>
                         )}
 
@@ -189,20 +200,29 @@ Note : Vous devrez changer ce mot de passe à votre première connexion.`
                                 <button
                                     type="button"
                                     onClick={copyToClipboard}
-                                    className="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                                    className="mt-3 bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm"
                                 >
-                                    📋 Copier les identifiants
+                                    Copier les identifiants
                                 </button>
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                        >
-                            {loading ? '⏳ Création en cours...' : '➕ Créer l\'utilisateur'}
-                        </button>
+                        <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/admin/users')}
+                                className="w-full border border-gray-300 text-gray-800 py-3 rounded-lg hover:bg-gray-50 transition font-semibold"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-900 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                            >
+                                {loading ? 'Création...' : "Créer l'utilisateur"}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

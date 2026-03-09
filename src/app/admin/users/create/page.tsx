@@ -1,22 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import  Retour   from '@/components/Retour'
-import { IoCreateOutline } from "react-icons/io5";
-import { RiAiGenerate } from "react-icons/ri";
+import { IoCreateOutline } from "react-icons/io5"
+import { RiAiGenerate } from "react-icons/ri"
+
+type CustomRole = {
+    id: string
+    name: string
+}
+
 export default function CreateUserPage() {
     const [email, setEmail] = useState('')
     const [nom, setNom] = useState('')
     const [telephone, setTelephone] = useState('')
     const [password, setPassword] = useState('')
     const [role, setRole] = useState('USER')
+    const [customRoles, setCustomRoles] = useState<CustomRole[]>([])
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    // Générer un mot de passe aléatoire sécurisé
+    // ── Charger les rôles custom au montage ──
+    useEffect(() => {
+        fetch('/api/admin/roles')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setCustomRoles(data)
+            })
+            .catch(() => {})
+    }, [])
+
     const generatePassword = () => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
         let pwd = ''
@@ -52,7 +67,6 @@ Mot de passe temporaire : ${password}
 
 ⚠️ L'utilisateur devra changer ce mot de passe à sa première connexion.`)
 
-                // Reset form après 5 secondes
                 setTimeout(() => {
                     setEmail('')
                     setNom('')
@@ -61,7 +75,7 @@ Mot de passe temporaire : ${password}
                     setSuccess('')
                 }, 5000)
             }
-        } catch (error) {
+        } catch {
             setError('Erreur de connexion au serveur')
         } finally {
             setLoading(false)
@@ -76,14 +90,12 @@ Mot de passe : ${password}
 Lien de connexion : ${window.location.origin}/login
 
 Note : Vous devrez changer ce mot de passe à votre première connexion.`
-
         navigator.clipboard.writeText(text)
         alert('Copié dans le presse-papier !')
     }
 
     return (
         <div className="min-h-screen bg-gray-100">
-           <Retour />
             <div className="max-w-6xl mx-auto px-6 py-10">
                 <div className="flex items-start gap-4 mb-8">
                     <div className="h-14 w-14 rounded-xl bg-green-800 shadow flex items-center justify-center text-white text-2xl">
@@ -137,6 +149,7 @@ Note : Vous devrez changer ce mot de passe à votre première connexion.`
                             />
                         </div>
 
+                        {/* ── Sélecteur de rôle ── */}
                         <div>
                             <label className="block text-sm font-semibold text-black mb-2">
                                 Rôle <span className="text-red-600">*</span>
@@ -146,17 +159,29 @@ Note : Vous devrez changer ce mot de passe à votre première connexion.`
                                 onChange={(e) => setRole(e.target.value)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent text-black"
                             >
-                                <option value="USER">Utilisateur</option>
-                                <option value="ADMIN">Administrateur</option>
+                                {/* ── Rôles système ── */}
+                                <optgroup label="Rôles système">
+                                    <option value="USER">Utilisateur</option>
+                                    <option value="ADMIN">Administrateur</option>
+                                </optgroup>
+
+                                {/* ── Rôles personnalisés ── */}
+                                {customRoles.length > 0 && (
+                                    <optgroup label="Rôles personnalisés">
+                                        {customRoles.map(cr => (
+                                            <option key={cr.id} value={cr.id}>
+                                                {cr.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                )}
                             </select>
                         </div>
 
                         <div className="border-t border-gray-200 pt-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <h2 className="text-xl font-bold text-black">Mot de passe temporaire</h2>
-                                <span className="inline-flex items-center justify-center h-6 w-6 rounded bg-yellow-100 text-yellow-700 text-sm">
-                                    
-                                </span>
+                                <span className="inline-flex items-center justify-center h-6 w-6 rounded bg-yellow-100 text-yellow-700 text-sm">⚠</span>
                             </div>
 
                             <label className="block text-sm font-semibold text-black mb-2">

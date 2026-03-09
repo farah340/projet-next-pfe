@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import  Retour   from '@/components/Retour'
+
 export type EditableUser = {
     id: string
     email: string
@@ -67,10 +67,21 @@ export default function EditUserForm({ user }: { user: EditableUser }) {
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
-            <Retour/>
             <div className="max-w-2xl mx-auto">
+
+                {/* ── Bouton retour ── */}
                 <div className="mb-6">
-                    
+                    <button
+                        type="button"
+                        onClick={() => router.push('/admin/users')}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        Retour 
+                    </button>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-md p-8">
@@ -149,7 +160,7 @@ export default function EditUserForm({ user }: { user: EditableUser }) {
                         <button
                             type="submit"
                             disabled={loading}
-                             className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-900 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                            className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-900 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                         >
                             {loading ? '⏳ Enregistrement...' : 'Enregistrer'}
                         </button>

@@ -9,3 +9,5 @@ ALTER TABLE "Account" DROP COLUMN "firstLogin";
 
 -- AlterTable
 ALTER TABLE "User" ADD COLUMN     "firstLogin" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "User" ADD COLUMN     "lastLogin" TIMESTAMP(3) DEFAULT NOW();
+

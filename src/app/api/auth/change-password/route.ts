@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
             data: {
                 password: hashedPassword,
                 firstLogin: false,  // Plus besoin de changer
+                lastLogin: new Date()
             }
         })
 

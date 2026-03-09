@@ -1,6 +1,6 @@
 import { auth } from '../../lib/auth'
 import { redirect } from 'next/navigation'
-import ChangePasswordForm from './ChangePasswordForm'
+import ChangePasswordForm from '../../components/ChangePasswordForm'
 
 
 export default async function ChangePasswordPage() {
@@ -8,8 +8,9 @@ export default async function ChangePasswordPage() {
 
     if (!session) {
         redirect('/login')
+    }if(session.user.firstLogin === false) {
+        redirect('/dashboard')
     }
-
     return (
 
         <div className="min-h-screen bg-gray-100" >

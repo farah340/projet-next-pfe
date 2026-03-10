@@ -1,53 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This file imports all schema files from the schema directory
+// Prisma will process this as a single schema
 
 generator client {
   provider = "prisma-client-js"
-  //output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String  // "oauth" | "email" | "credentials"
-  provider          String  // "credentials", "google", "github", etc.
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
 
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+// Import all models from schema directory
+// Note: This is a workaround - Prisma doesn't natively support file imports
+// We need to concatenate all schema files here
 
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// From base.prisma (already included above)
 
-  @@index([userId])
-}model VerificationToken {
-  identifier String   // Email de l'utilisateur
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
+// From user.prisma
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -63,6 +31,7 @@ model User {
   lastLogin     DateTime? @default(now())
   accounts      Account[]
   sessions      Session[]
+  zones         Zone[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -73,24 +42,84 @@ enum Role {
   USER
 }
 
+// From zone.prisma
+model Zone {
+  id          String   @id @default(cuid())
+  nom         String
+  description String?
+
+  // Données géographiques
+  adresse     String   // Nom affiché de la ville/région
+  lat         Float
+  lng         Float
+  geojson     Json?    // Frontières officielles GeoJSON
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// From account.prisma
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// From session.prisma
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// From VerificationToken.prisma
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// From customRole.prisma
 model CustomRole {
-  id          String       @id @default(cuid())
-  name        String       @unique
+  id          String @id @default(cuid())
+  name        String @unique
   description String?
   permissions Permission[]
   users       User[]
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+// From permission.prisma
 model Permission {
-  id       String     @id @default(cuid())
-  resource String
-  action   String
+  id            String      @id @default(cuid())
+  name          String      @unique
+  description   String?
+  resource      String
+  action        String
+  customRoles   CustomRole[]
 
-  roleId   String
-  role     CustomRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, resource, action])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

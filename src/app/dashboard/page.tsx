@@ -1,69 +1,33 @@
+// app/dashboard/page.tsx
 import { requireAuth } from '@/lib/authutils'
 import { redirect } from 'next/navigation'
-import LogoutButton from '@/components/LogoutButton'
+import prisma from '@/lib/bd'
+import DashboardClient from '@/components/Dashboardclient'
 
 export default async function DashboardPage() {
-
     const session = await requireAuth()
-    if (session.user.role === 'ADMIN') {
-        redirect('/admin')
-    }
-    if (session.user.firstLogin) {
-        redirect('/change-password')
-    }
+    if (session.user.role === 'ADMIN') redirect('/admin')
+    if (session.user.firstLogin) redirect('/change-password')
 
-    // Rediriger si première connexion (temporairement désactivé pour tester)
-    // if (session.user.firstLogin) {
-    //     redirect('/change-password')
-    // }
+    // Stats de l'utilisateur
+    const [totalZones, recentZones] = await Promise.all([
+        prisma.zone.count({ where: { userId: session.user.id } }),
+        prisma.zone.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+            take: 4,
+            select: { id: true, nom: true, adresse: true, createdAt: true },
+        }),
+    ])
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold text-gray-800">Dashboard Utilisateur</h1>
-                        <LogoutButton />
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <h2 className="text-xl font-semibold mb-2 text-gray-800">Bienvenue !</h2>
-                        <p className="text-gray-700">
-                            Connecté en tant que : <strong>{session.user.email}</strong>
-                        </p>
-                        <p className="text-gray-700">
-                            Nom : <strong>{session.user.name}</strong>
-                        </p>
-                        <p className="text-gray-700">
-                            Rôle : <span className="bg-blue-200 px-2 py-1 rounded">{session.user.role}</span>
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="border border-gray-200 rounded-lg p-4">
-                            <h3 className="font-semibold mb-2 text-gray-800">Définir une zone géographique</h3>
-                            <p className="text-gray-600 text-sm mb-3 text-gray-800">
-                                Sélectionnez une zone pour analyser le marché
-                            </p>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-gray-800">
-                                Nouvelle zone
-                            </button>
-                        </div>
-
-                        <div className="border border-gray-200 rounded-lg p-4">
-                            <h3 className="font-semibold mb-2 text-gray-800">Mes analyses</h3>
-                            <p className="text-gray-600 text-sm mb-3 text-gray-800">
-                                Consulter vos rapports d'analyse
-                            </p>
-                            <button className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-gray-800">
-                                Voir les rapports
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <DashboardClient
+            userName={session.user.name ?? ''}
+            totalZones={totalZones}
+            recentZones={recentZones.map(z => ({
+                ...z,
+                createdAt: z.createdAt.toISOString(),
+            }))}
+        />
     )
-
-
 }

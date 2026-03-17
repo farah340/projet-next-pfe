@@ -29,9 +29,6 @@ export default async function RootLayout({
   
   return (
     <html lang="fr">
-      <head>
-        <script src="http://localhost:8097"></script>
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

@@ -11,7 +11,6 @@ model User {
 
   firstLogin    Boolean   @default(true)
   lastLogin     DateTime? @default(now())
-  accounts      Account[]
   sessions      Session[]
   zones         Zone[]
 
@@ -21,4 +20,5 @@ model User {
 enum Role {
   ADMIN
   USER
+  CUSTOM
 }

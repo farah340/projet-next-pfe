@@ -33,8 +33,8 @@ const navItems = [
         ),
     },
     {
-        href: '/admin/roles/create',
-        label: 'Créer un rôle',
+        href: '/admin/roles',
+        label: 'Rôles & Permissions',
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,27 +65,31 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
 
     return (
         <>
-            {/* Sidebar fixe */}
-            <aside
-                className={`
-                    fixed left-0 top-0 z-40 flex h-full flex-col
-                    border-r border-slate-200/70 bg-white shadow-sm
-                    transition-all duration-300 ease-in-out
-                    ${expanded ? 'w-60' : 'w-[68px]'}
-                `}
-            >
-                {/* Header sidebar */}
+            <aside className={`
+                fixed left-0 top-0 z-40 flex h-full flex-col
+                border-r border-slate-200/70 bg-white shadow-sm
+                transition-all duration-300 ease-in-out
+                ${expanded ? 'w-60' : 'w-[68px]'}
+            `}>
+
+                {/* ── Header ────────────────────────────────── */}
                 <div className={`flex h-16 items-center border-b border-slate-200/60 px-3 ${expanded ? 'justify-between' : 'justify-center'}`}>
                     {expanded && (
-                        <span className="text-base font-bold tracking-tight text-slate-900">
-                            Admin
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">
+                                M&M
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900 leading-tight">MarketMap</p>
+                                <p className="text-[10px] text-slate-400 leading-tight">Administration</p>
+                            </div>
+                        </div>
                     )}
                     <button
                         type="button"
                         onClick={() => setExpanded(v => !v)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        aria-label={expanded ? 'Réduire le menu' : 'Agrandir le menu'}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                        aria-label={expanded ? 'Réduire' : 'Agrandir'}
                     >
                         {expanded ? (
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -101,21 +105,23 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
                     </button>
                 </div>
 
-                {/* Nav */}
+                {/* ── Nav ───────────────────────────────────── */}
                 <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 pt-3">
 
-                    {/* Bouton Dashboard */}
+                    {/* Dashboard */}
                     <Link
                         href="/admin"
                         title={!expanded ? 'Dashboard' : undefined}
                         className={`
                             group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium
                             transition-colors duration-150
-                            ${pathname === '/admin' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
+                            ${pathname === '/admin'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
                             ${!expanded ? 'justify-center' : ''}
                         `}
                     >
-                        <span className={`flex-shrink-0 ${pathname === '/admin' ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`}>
+                        <span className={`flex-shrink-0 ${pathname === '/admin' ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -124,12 +130,13 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
                                 <rect x="14" y="14" width="7" height="7" rx="1" />
                             </svg>
                         </span>
-                        {expanded && <span className="truncate font-semibold">Dashboard</span>}
+                        {expanded && <span className="truncate">Dashboard</span>}
                     </Link>
 
                     {/* Séparateur */}
                     <div className="my-1 border-t border-slate-100" />
 
+                    {/* Nav items */}
                     {navItems.map((item) => {
                         const active = pathname === item.href
                         return (
@@ -140,11 +147,13 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
                                 className={`
                                     group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium
                                     transition-colors duration-150
-                                    ${active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
+                                    ${active
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}
                                     ${!expanded ? 'justify-center' : ''}
                                 `}
                             >
-                                <span className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-700'}`}>
+                                <span className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`}>
                                     {item.icon}
                                 </span>
                                 {expanded && <span className="truncate">{item.label}</span>}
@@ -153,7 +162,7 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
                     })}
                 </nav>
 
-                {/* Logout en bas */}
+                {/* ── Footer logout ──────────────────────────── */}
                 {topRight && (
                     <div className={`border-t border-slate-200/60 p-3 ${!expanded ? 'flex justify-center' : ''}`}>
                         {topRight}
@@ -161,7 +170,7 @@ export default function AdminSidebar({ topRight }: { topRight?: ReactNode }) {
                 )}
             </aside>
 
-            {/* Spacer invisible qui pousse le contenu principal */}
+            {/* Spacer */}
             <div className={`flex-shrink-0 transition-all duration-300 ease-in-out ${expanded ? 'w-60' : 'w-[68px]'}`} />
         </>
     )

@@ -2,9 +2,22 @@ import type { ReactNode } from 'react'
 import { requireAdmin } from '@/lib/authutils'
 import LogoutButton from '@/components/LogoutButton'
 import AdminSidebar from '@/components/AdminSidebar'
-
+import { getSession } from '@/lib/authutils'
+import { redirect } from 'next/navigation'
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-    await requireAdmin()
+    const session = await getSession()
+
+    // Non authentifié → login
+    if (!session) redirect('/login')
+
+    const role        = session.user?.role
+    const permissions = (session.user?.permissions ?? []) as string[]
+
+    // Ni ADMIN ni CUSTOM avec permissions → dashboard
+    const isAdmin  = role === 'ADMIN'
+    const isCustom = role === 'CUSTOM' && permissions.length > 0
+
+    if (!isAdmin && !isCustom) redirect('/dashboard')
 
     return (
         <div className="flex min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">

@@ -3,25 +3,31 @@ import { auth } from '@/lib/auth'
 import bcrypt from 'bcrypt'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Role } from '@prisma/client'
 
 const connectionString = process.env.DATABASE_URL!
 const pool = new Pool({ connectionString })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-const SYSTEM_ROLES = ['ADMIN', 'USER']
+const SYSTEM_ROLES = ['ADMIN', 'USER', 'CUSTOM']
 
 export async function POST(request: NextRequest) {
     try {
         const session = await auth()
 
-        if (!session || session.user.role !== 'ADMIN') {
+        // TEMPORAIRE: Autoriser tout accès pour tester
+        console.log('=== API CREATE DEBUG ===')
+        console.log('session:', session?.user?.email, 'role:', session?.user?.role)
+        console.log('========================')
+
+        if (!session || session.user.role !== 'ADMIN' && session.user.role !== 'CUSTOM' ) {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
-        }
+         }
 
         const { email, nom, telephone, password, role } = await request.json()
 
+        // ── Validation des champs requis ──────────────────────────
         if (!email || !nom || !password) {
             return NextResponse.json(
                 { error: 'Email, nom et mot de passe sont requis' },
@@ -45,25 +51,38 @@ export async function POST(request: NextRequest) {
         const isSystemRole = SYSTEM_ROLES.includes(role)
 
         // Si rôle custom, vérifier qu'il existe en base
+        let customRoleId: string | null = null
+
         if (!isSystemRole) {
-            const customRole = await prisma.customRole.findUnique({ where: { id: role } })
+            const customRole = await prisma.customRole.findUnique({
+                where: { id: role }
+            })
             if (!customRole) {
-                return NextResponse.json({ error: 'Rôle personnalisé introuvable' }, { status: 400 })
+                return NextResponse.json(
+                    { error: 'Rôle personnalisé introuvable' },
+                    { status: 400 }
+                )
             }
+            customRoleId = customRole.id
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
+        // ── Déterminer le rôle Prisma à stocker ───────────────────
+        // ADMIN  → role: ADMIN,  customRoleId: null
+        // USER   → role: USER,   customRoleId: null
+        // custom → role: CUSTOM, customRoleId: <id du customRole>  ← CORRIGÉ
+        const prismaRole: Role = isSystemRole
+            ? (role as Role)
+            : 'CUSTOM'  
         const user = await prisma.user.create({
             data: {
                 email,
                 nom,
                 telephone: telephone || null,
                 password: hashedPassword,
-                // Rôle système : ADMIN ou USER, sinon on met USER par défaut
-                role: isSystemRole ? role : 'USER',
-                // Rôle custom : lié via customRoleId
-                customRoleId: !isSystemRole ? role : null,
+                role: prismaRole,
+                customRoleId,
                 firstLogin: true,
             },
             select: {
@@ -72,7 +91,19 @@ export async function POST(request: NextRequest) {
                 nom: true,
                 role: true,
                 customRoleId: true,
-                customRole: { select: { name: true } },
+                customRole: {
+                    select: {
+                        id: true,
+                        name: true,
+                        permissions: {
+                            select: {
+                                id: true,
+                                action: true,
+                                resource: true,
+                            }
+                        }
+                    }
+                },
                 firstLogin: true,
                 createdAt: true,
             },
@@ -82,8 +113,12 @@ export async function POST(request: NextRequest) {
             { message: 'Utilisateur créé avec succès', user },
             { status: 201 }
         )
+
     } catch (error) {
         console.error('Erreur création utilisateur:', error)
-        return NextResponse.json({ error: 'Erreur serveur lors de la création' }, { status: 500 })
+        return NextResponse.json(
+            { error: 'Erreur serveur lors de la création' },
+            { status: 500 }
+        )
     }
 }

@@ -1,0 +1,12 @@
+model TypeActivite {
+  id          String   @id @default(cuid())
+  nom         String    
+  osmKey      String    
+  osmValue    String   
+  icone       String?  
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  zones       ZoneActivite[]
+}

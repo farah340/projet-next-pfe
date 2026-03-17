@@ -15,6 +15,7 @@ export default async function EditUserPage({ params }: { params: { id: string } 
             nom: true,
             telephone: true,
             role: true,
+            customRoleId: true,
             firstLogin: true,
         },
     })
@@ -34,7 +35,7 @@ export default async function EditUserPage({ params }: { params: { id: string } 
 
     const editable: EditableUser = {
         ...user,
-        role: user.role as 'ADMIN' | 'USER',
+        role: user.customRoleId ? 'CUSTOM' : (user.role as 'ADMIN' | 'USER'),
     }
 
     return <EditUserForm user={editable} />

@@ -1,169 +1,161 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export type EditableUser = {
-    id: string
-    email: string
-    nom: string
+    id: string; email: string; nom: string
     telephone: string | null
-    role: 'ADMIN' | 'USER'
+    role: 'ADMIN' | 'USER' | 'CUSTOM'
+    customRoleId: string | null
     firstLogin: boolean
 }
 
+type CustomRole = { id: string; name: string }
+
 export default function EditUserForm({ user }: { user: EditableUser }) {
     const router = useRouter()
-    const [email, setEmail] = useState(user.email)
-    const [nom, setNom] = useState(user.nom)
+    const [email, setEmail]         = useState(user.email)
+    const [nom, setNom]             = useState(user.nom)
     const [telephone, setTelephone] = useState(user.telephone ?? '')
-    const [role, setRole] = useState<'ADMIN' | 'USER'>(user.role)
-    const [firstLogin, setFirstLogin] = useState<boolean>(user.firstLogin)
+    // Si CUSTOM → on met le customRoleId, sinon le role système
+    const [role, setRole]           = useState(
+        user.role === 'CUSTOM' && user.customRoleId
+            ? user.customRoleId
+            : user.role
+    )
+    const [firstLogin, setFirstLogin] = useState(user.firstLogin)
+    const [customRoles, setCustomRoles] = useState<CustomRole[]>([])
+    const [loading, setLoading]     = useState(false)
+    const [error, setError]         = useState('')
+    const [success, setSuccess]     = useState('')
 
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState('')
-    const [success, setSuccess] = useState('')
+    // ── Charger les rôles custom ──────────────────────────────
+    useEffect(() => {
+        fetch('/api/admin/roles')
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setCustomRoles(data) })
+            .catch(() => {})
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError('')
-        setSuccess('')
-        setLoading(true)
-
+        setError(''); setSuccess(''); setLoading(true)
         try {
-            const res = await fetch('/api/admin/users/edit', {
-                method: 'POST',
+            const res  = await fetch('/api/admin/users/edit', {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: user.id,
-                    email,
-                    nom,
-                    telephone,
-                    role,
-                    firstLogin,
-                }),
+                body: JSON.stringify({ id: user.id, email, nom, telephone, role, firstLogin }),
             })
-
             const data = await res.json().catch(() => ({}))
-
-            if (!res.ok) {
-                setError(data?.error || 'Erreur lors de la modification')
-                return
-            }
-
-            setSuccess('Utilisateur modifié avec succès')
+            if (!res.ok) { setError(data?.error || 'Erreur lors de la modification'); return }
+            setSuccess('Modifications enregistrées')
             router.refresh()
-
-            setTimeout(() => {
-                router.push('/admin/users')
-                router.refresh()
-            }, 600)
-        } catch {
-            setError('Erreur de connexion au serveur')
-        } finally {
-            setLoading(false)
-        }
+            setTimeout(() => { router.push('/admin/users'); router.refresh() }, 800)
+        } catch { setError('Erreur de connexion au serveur') }
+        finally  { setLoading(false) }
     }
 
+    const inputCls = "w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+    const labelCls = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5"
+
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
+        <div className="min-h-screen bg-slate-50 p-8">
             <div className="max-w-2xl mx-auto">
 
-                {/* ── Bouton retour ── */}
-                <div className="mb-6">
-                    <button
-                        type="button"
-                        onClick={() => router.push('/admin/users')}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-                    >
+                {/* ── Header ── */}
+                <div className="flex items-center gap-4 mb-8">
+                    <button type="button" onClick={() => router.push('/admin/users')}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                             fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
-                        Retour 
                     </button>
+                    <div>
+                        <h1 className="text-xl font-bold text-slate-900 leading-tight">Modifier un utilisateur</h1>
+                        <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
+                    </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <h1 className="text-3xl font-bold mb-6 text-black">Modifier un utilisateur</h1>
+                {/* ── Formulaire ── */}
+                <div className="bg-white rounded-2xl border border-slate-200/70 shadow-sm p-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            <label className={labelCls}>Email <span className="text-red-500">*</span></label>
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                                required className={inputCls} />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Nom complet *</label>
-                            <input
-                                type="text"
-                                value={nom}
-                                onChange={(e) => setNom(e.target.value)}
-                                required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            <label className={labelCls}>Nom complet <span className="text-red-500">*</span></label>
+                            <input type="text" value={nom} onChange={e => setNom(e.target.value)}
+                                required className={inputCls} />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
-                            <input
-                                type="tel"
-                                value={telephone}
-                                onChange={(e) => setTelephone(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            <label className={labelCls}>Téléphone</label>
+                            <input type="tel" value={telephone} onChange={e => setTelephone(e.target.value)}
+                                className={inputCls} />
                         </div>
 
+                        {/* ── Sélecteur de rôle avec custom roles ── */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Rôle *</label>
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value as 'ADMIN' | 'USER')}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                                <option value="USER">Utilisateur</option>
-                                <option value="ADMIN">Administrateur</option>
+                            <label className={labelCls}>Rôle <span className="text-red-500">*</span></label>
+                            <select value={role} onChange={e => setRole(e.target.value)} className={inputCls}>
+                                <optgroup label="Rôles système">
+                                    <option value="USER">Utilisateur</option>
+                                    <option value="ADMIN">Administrateur</option>
+                                </optgroup>
+                                {customRoles.length > 0 && (
+                                    <optgroup label="Rôles personnalisés">
+                                        {customRoles.map(cr => (
+                                            <option key={cr.id} value={cr.id}>{cr.name}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <input
-                                id="firstLogin"
-                                type="checkbox"
-                                checked={firstLogin}
-                                onChange={(e) => setFirstLogin(e.target.checked)}
-                                className="h-4 w-4"
-                            />
-                            <label htmlFor="firstLogin" className="text-sm text-gray-700">
+                        <div className="flex items-center gap-3 py-1">
+                            <input id="firstLogin" type="checkbox" checked={firstLogin}
+                                onChange={e => setFirstLogin(e.target.checked)}
+                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                            <label htmlFor="firstLogin" className="text-sm text-slate-600">
                                 Forcer le changement de mot de passe à la prochaine connexion
                             </label>
                         </div>
 
                         {error && (
-                            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
+                            <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
                                 {error}
                             </div>
                         )}
-
                         {success && (
-                            <div className="bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
+                            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
+                                <svg className="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
                                 {success}
                             </div>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-900 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                        >
-                            {loading ? '⏳ Enregistrement...' : 'Enregistrer'}
-                        </button>
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={() => router.push('/admin/users')}
+                                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition">
+                                Annuler
+                            </button>
+                            <button type="submit" disabled={loading}
+                                className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                {loading ? 'Enregistrement...' : 'Enregistrer'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

@@ -32,29 +32,36 @@ function RoleBadge({ role, customRoleName }: { role: string; customRoleName: str
     )
 }
 
-export default function UsersTable({
+export default function DeleteUsersTable({
     users,
     permissions = [],
+    isAdmin = false,
 }: {
-    users: AdminUserRow[]
+    users:       AdminUserRow[]
     permissions?: string[]
+    isAdmin?:     boolean
 }) {
     const router = useRouter()
-    const [search, setSearch] = useState('')
-    console.log('PERMISSIONS REÇUES:', permissions)
-    // ── Droits selon permissions ──────────────────────────────
-    const isAdmin   = permissions.length === 0  // ADMIN → permissions vide = accès total
+    const [search, setSearch]   = useState('')
+    const [deleting, setDeleting] = useState<string | null>(null)
+
+    // ── Droits ────────────────────────────────────────────────
     const canEdit   = isAdmin || permissions.includes('modifier')
     const canDelete = isAdmin || permissions.includes('supprimer')
-    console.log('canEdit:', canEdit, 'canDelete:', canDelete)
+
     const filtered = users.filter(u =>
         u.nom.toLowerCase().includes(search.toLowerCase())
     )
 
     const handleDelete = async (id: string, nom: string) => {
-        if (!confirm(`Supprimer ${nom} ?`)) return
-        await fetch(`/api/admin/users/delete?id=${id}`, { method: 'DELETE' })
-        router.refresh()
+        if (!confirm(`Supprimer définitivement ${nom} ?`)) return
+        setDeleting(id)
+        try {
+            await fetch(`/api/admin/users/delete?id=${id}`, { method: 'DELETE' })
+            router.refresh()
+        } finally {
+            setDeleting(null)
+        }
     }
 
     return (
@@ -125,25 +132,39 @@ export default function UsersTable({
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
 
-                                        {/* Modifier — visible si permission 'modifier' */}
-                                        {canEdit && (
-                                            <button
-                                                onClick={() => router.push(`/admin/users/edit/${user.id}`)}
-                                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition"
-                                            >
-                                                Modifier
-                                            </button>
-                                        )}
+                                        {/* ── Modifier — inactif si pas la permission ── */}
+                                        <button
+                                            onClick={() => canEdit
+                                                ? router.push(`/admin/users/edit/${user.id}`)
+                                                : undefined
+                                            }
+                                            disabled={!canEdit}
+                                            title={!canEdit ? "Vous n'avez pas la permission de modifier" : undefined}
+                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition
+                                                ${canEdit
+                                                    ? 'bg-amber-500 text-white hover:bg-amber-600 cursor-pointer'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                                                }
+                                            `}
+                                        >
+                                            Modifier
+                                        </button>
 
-                                        {/* Supprimer — visible SEULEMENT si permission 'supprimer' */}
-                                        {canDelete && (
-                                            <button
-                                                onClick={() => handleDelete(user.id, user.nom)}
-                                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-                                            >
-                                                Supprimer
-                                            </button>
-                                        )}
+                                        {/* ── Supprimer — actif car on est sur la page delete ── */}
+                                        <button
+                                            onClick={() => handleDelete(user.id, user.nom)}
+                                            disabled={!canDelete || deleting === user.id}
+                                            title={!canDelete ? "Vous n'avez pas la permission de supprimer" : undefined}
+                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition
+                                                ${canDelete
+                                                    ? 'bg-red-500 text-white hover:bg-red-600 cursor-pointer'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                                                }
+                                                ${deleting === user.id ? 'opacity-50' : ''}
+                                            `}
+                                        >
+                                            {deleting === user.id ? '...' : 'Supprimer'}
+                                        </button>
 
                                     </div>
                                 </td>

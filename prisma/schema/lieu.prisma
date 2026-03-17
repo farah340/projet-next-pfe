@@ -1,0 +1,24 @@
+model Lieu {
+  id          String   @id @default(cuid())
+
+  // Identifiant Google Maps (évite les doublons)
+  placeId     String   @unique
+
+  nom         String
+  adresse     String
+  lat         Float
+  lng         Float
+
+  // Données Google Maps
+  note        Float?
+  nbAvis      Int      @default(0)
+  types       String   // ex: "restaurant, food"
+  statut      String   @default("OPERATIONAL")
+
+  // Lien vers la zone de collecte
+  zoneId      String
+  zone        Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  collecteLe  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -11,7 +11,8 @@ model Zone {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  lieux       Lieu[]
+  activites   ZoneActivite[] 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

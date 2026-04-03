@@ -1,12 +1,16 @@
 model TypeActivite {
   id          String   @id @default(cuid())
   nom         String    
-  osmKey      String    
-  osmValue    String   
+
+   
+  radius       Int      @default(1500)   
+  actif        Boolean  @default(true) 
+
   icone       String?  
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   zones       ZoneActivite[]
+  categories  Categorie[]
 }

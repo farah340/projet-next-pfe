@@ -1,0 +1,12 @@
+model Categorie {
+  id              String   @id @default(uuid())
+  name            String
+  google_type     String
+  keywords        String[]
+
+  typeActiviteId  String
+  typeActivite    TypeActivite @relation(fields: [typeActiviteId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

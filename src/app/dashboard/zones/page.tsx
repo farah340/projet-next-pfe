@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-const MapZone = dynamic(() => import('@/components/MapZone'), {
+const MapZone = dynamic(() => import('@/components/Map'), {
     ssr: false,
     loading: () => (
         <div className="flex h-[600px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
@@ -51,7 +51,7 @@ export default function MapPage() {
                     </Link>
                 </div>
 
-                <MapZone />
+                <MapZone center={[48.8566, 2.3522]} lieux={[]} />
             </div>
         </div>
     )

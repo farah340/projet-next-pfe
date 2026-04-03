@@ -9,13 +9,14 @@ model Lieu {
   lat         Float
   lng         Float
 
-  // Données Google Maps
+
   note        Float?
   nbAvis      Int      @default(0)
-  types       String   // ex: "restaurant, food"
+  
+  types       String 
+  categorie   String?   
   statut      String   @default("OPERATIONAL")
 
-  // Lien vers la zone de collecte
   zoneId      String
   zone        Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
 

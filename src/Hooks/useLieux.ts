@@ -34,6 +34,7 @@ export function useLieux() {
         lng:         String(zone.lng),
         categorieId: categorie.id,
         categorie:   categorie.name,
+        nomZone:     zone.nom.split(',')[0],
       })
       const res  = await fetch(`/api/zones/lieux?${params}`)
       const data = await res.json()

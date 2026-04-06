@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/bd'
- 
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const lat = searchParams.get('lat')
   const lng = searchParams.get('lng')
   const categorieId = searchParams.get('categorieId')   // id depuis table Categorie
   const categorie = searchParams.get('categorie')        // nom lisible (fallback filtre)
- 
+
   if (!lat || !lng) {
     return NextResponse.json({ error: 'lat et lng requis' }, { status: 400 })
   }
- 
+
   const latNum = parseFloat(lat)
   const lngNum = parseFloat(lng)
- 
+
   try {
     // 1. Récupérer le google_type depuis la table Categorie
     let googleType: string | null = null
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       })
       googleType = cat?.google_type ?? null
     }
- 
+
     // 2. Chercher les lieux dans un rayon de 5km
     const tousLesLieux: any[] = await prisma.$queryRaw`
       SELECT 
@@ -57,16 +57,19 @@ export async function GET(req: NextRequest) {
       ORDER BY l."collecteLe" DESC
       LIMIT 200
     `
- 
+
     // 3. Filtrer par catégorie
     const lieuxFiltres = categorie && categorie !== 'all'
-      ? tousLesLieux.filter(l => l.categorie === categorie)
+      ? tousLesLieux.filter(l =>
+        l.categorie?.toLowerCase() === categorie.toLowerCase() ||
+        l.categorie === googleType  // "cafe" matche aussi
+      )
       : tousLesLieux
- 
+
     // 4. Si aucun lieu → déclencher N8N avec categorieId
     if (lieuxFiltres.length === 0 && categorieId) {
       console.log('🚀 N8N WEBHOOK - Collecte déclenchée:', { latNum, lngNum, categorieId, googleType })
- 
+
       fetch('http://localhost:5678/webhook/marketmap/collecte-zones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,22 +79,23 @@ export async function GET(req: NextRequest) {
           categorieId,
           categorie: categorie ?? '',
           google_type: googleType ?? 'restaurant',
+          nomZone: searchParams.get('nomZone') ?? '',
         })
       }).catch(err => console.error('❌ N8N WEBHOOK ERROR:', err.message))
- 
+
       return NextResponse.json({
         lieux: [],
         collecteEnCours: true,
         message: 'Collecte en cours, réessayez dans 30 secondes'
       })
     }
- 
+
     return NextResponse.json({
       lieux: lieuxFiltres,
       collecteEnCours: false,
       total: lieuxFiltres.length
     })
- 
+
   } catch (error) {
     console.error('Erreur lieux:', error)
     return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })

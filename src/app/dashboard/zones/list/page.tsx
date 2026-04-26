@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ZonesListClient from '@/components/ZonesListClient'
+import ZonesListClient from '@/components/zone-analyse/ZonesListClient'
 
 type Zone = {
     id: string

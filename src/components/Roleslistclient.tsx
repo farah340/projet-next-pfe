@@ -50,7 +50,7 @@ export default function RolesListClient({ roles: initial }: { roles: Role[] }) {
                 <button
                     type="button"
                     onClick={() => router.push('/admin/roles/create')}
-                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#6c63ff] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5a51e0]"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

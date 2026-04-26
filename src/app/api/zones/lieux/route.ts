@@ -3,8 +3,8 @@ import { prisma } from '@/lib/bd'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const lat = searchParams.get('lat')
-  const lng = searchParams.get('lng')
+  const lat = searchParams.get('lat')?.trim()
+  const lng = searchParams.get('lng')?.trim()
   const categorieId = searchParams.get('categorieId')   // id depuis table Categorie
   const categorie = searchParams.get('categorie')        // nom lisible (fallback filtre)
 
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       )
       : tousLesLieux
 
-    // 4. Si aucun lieu → déclencher N8N avec categorieId
+    // 4. Si aucun lieu → déclencher N8N avec google_type (English) au lieu de categorie.name (French)
     if (lieuxFiltres.length === 0 && categorieId) {
       console.log('🚀 N8N WEBHOOK - Collecte déclenchée:', { latNum, lngNum, categorieId, googleType })
 
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
           lat: latNum,
           lng: lngNum,
           categorieId,
-          categorie: categorie ?? '',
+          categorie: googleType ?? 'restaurant', // Utilise google_type (English) pour Google Places API
           google_type: googleType ?? 'restaurant',
           nomZone: searchParams.get('nomZone') ?? '',
         })

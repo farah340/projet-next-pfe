@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Search, Loader2, BarChart3 } from 'lucide-react'
 
 import { TypeActivite, Categorie, ZoneResult, Lieu } from '@/types'
-import { useZoneSearch }  from '@/Hooks/Usezoneseach'
-import { useLieux }       from '@/Hooks/useLieux'
-import { SearchBar }      from '@/components/zone_recherche/SearchBar'
-import { ActivitySelector } from '@/components/zone_recherche/ActivitySelector'
-import { GoogleMap }      from '@/components/zone_recherche/GoogleMap'
-import { LieuxGrid }      from '@/components/zone_recherche/LieuxGrid'
+import { useZoneSearch } from '@/Hooks/Usezoneseach'
+import { useLieux } from '@/Hooks/useLieux'
+import { SearchBar } from '@/components/zone_recherche/SearchBar'
+import CategorieSearch from '@/components/zone_recherche/CategorieSearch'
+import { GoogleMap } from '@/components/zone_recherche/GoogleMap'
+import { LieuxGrid } from '@/components/zone_recherche/LieuxGrid'
 
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
 
@@ -28,10 +28,9 @@ export default function RechercheZonePage() {
 
   const [selectedZone, setSelectedZone] = useState<ZoneResult | null>(null)
 
-  /* ── Types & catégories ── */
-  const [typesActivite, setTypesActivite]     = useState<TypeActivite[]>([])
-  const [selectedType, setSelectedType]       = useState<TypeActivite | null>(null)
+  /* ── Catégorie sélectionnée (le type est déduit automatiquement) ── */
   const [selectedCategorie, setSelectedCategorie] = useState<Categorie | null>(null)
+  const [selectedType, setSelectedType] = useState<TypeActivite | null>(null)
 
   /* ── Lieux ── */
   const {
@@ -42,17 +41,6 @@ export default function RechercheZonePage() {
   } = useLieux()
 
   const [selectedLieu, setSelectedLieu] = useState<Lieu | null>(null)
-
-  /* ── Charger types depuis DB ── */
-  useEffect(() => {
-    fetch('/api/types-activite')
-      .then(r => r.json())
-      .then(data => {
-        setTypesActivite(data.types || [])
-        if (data.types?.length > 0) setSelectedType(data.types[0])
-      })
-      .catch(console.error)
-  }, [])
 
   /* ── Handlers ── */
   const handleSelectZone = useCallback((zone: ZoneResult) => {
@@ -70,6 +58,31 @@ export default function RechercheZonePage() {
     setSelectedLieu(null)
   }, [setQuery, resetLieux])
 
+  /* ── Quand une catégorie est sélectionnée, on récupère aussi son type ── */
+  const handleCategorieSelect = useCallback((cat: any | null) => {
+    if (!cat) {
+      setSelectedCategorie(null)
+      setSelectedType(null)
+      return
+    }
+    
+    // Format compatible avec ton type Categorie existant
+    setSelectedCategorie({
+      id: cat.id,
+      name: cat.nom,
+      google_type: cat.google_type,
+      keywords: cat.keywords,
+      typeActiviteId: cat.type_id,
+    })
+    
+    // Reconstruire le type d'activité depuis les données reçues
+    setSelectedType({
+      id: cat.type_id,
+      nom: cat.type_nom,
+      emoji: cat.type_emoji,
+    })
+  }, [])
+
   const handleSearch = useCallback(() => {
     if (!selectedZone || !selectedCategorie) return
     setSelectedLieu(null)
@@ -82,6 +95,7 @@ export default function RechercheZonePage() {
   }, [selectedZone, selectedCategorie, selectedType, lieux, saveLieux])
 
   const canSearch = !!selectedZone && !!selectedCategorie && !loadingLieux
+
 
   /* ── Render ── */
   return (
@@ -103,12 +117,31 @@ export default function RechercheZonePage() {
           </div>
           {selectedZone && (
             <button
-              onClick={() => router.push(
-                `/analyse-zone/${encodeURIComponent(String(selectedZone.id))}` +
-                `?lat=${selectedZone.lat}&lng=${selectedZone.lng}` +
-                `&nom=${encodeURIComponent(selectedZone.nom.split(',')[0])}`
-              )}
-              className="flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
+              onClick={async () => {
+                // Appeler le webhook n8n
+                try {
+                  await fetch('http://localhost:5678/webhook-test/MarketMap/analyse-zone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      zoneId: selectedZone.id,
+                      nom: selectedZone.nom,
+                      adresse: selectedZone.adresse,
+                      lat: selectedZone.lat,
+                      lng: selectedZone.lng,
+                      activite: selectedCategorie?.name || selectedType?.nom || 'commerce'
+                    })
+                  })
+                } catch (e) {
+                  console.warn('Webhook n8n non disponible:', e)
+                }
+                // Redirection vers la page d'analyse
+                router.push(
+                  `/dashboard/analyse/${selectedZone.id}` +
+                  `?activite=${encodeURIComponent(selectedCategorie?.name || selectedType?.nom || 'commerce')}`
+                )
+              }}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
             >
               <BarChart3 className="w-4 h-4" />
               Analyser cette zone
@@ -131,13 +164,13 @@ export default function RechercheZonePage() {
             onHideSuggestions={hideSuggestions}
           />
 
-          <ActivitySelector
-            types={typesActivite}
-            selectedType={selectedType}
-            selectedCategorie={selectedCategorie}
-            onTypeChange={setSelectedType}
-            onCategorieChange={setSelectedCategorie}
-          />
+          {/* ✅ Recherche dynamique de catégorie */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">
+              Activité
+            </label>
+            <CategorieSearch onSelect={handleCategorieSelect} />
+          </div>
 
           {/* Bouton recherche */}
           <button
@@ -147,7 +180,7 @@ export default function RechercheZonePage() {
           >
             {loadingLieux
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Recherche en cours...</>
-              : <><Search  className="w-4 h-4" /> Rechercher</>
+              : <><Search className="w-4 h-4" /> Rechercher</>
             }
           </button>
         </div>

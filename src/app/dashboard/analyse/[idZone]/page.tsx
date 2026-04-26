@@ -57,7 +57,7 @@ export default function AnalyseZonePage({ params }: { params: { zoneId: string }
     const load = async () => {
       try {
         const res = await fetch(
-          `/api/analyses/${params.zoneId}?lat=${lat}&lng=${lng}&nom=${encodeURIComponent(nom || '')}`
+          `/api/analyse/${params.zoneId}?lat=${lat}&lng=${lng}&nom=${encodeURIComponent(nom || '')}`
         )
         const json = await res.json()
         if (json.error) throw new Error(json.error)

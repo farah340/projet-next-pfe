@@ -58,6 +58,8 @@ model Zone {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  analyses    Analyse[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -123,4 +125,28 @@ model Permission {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// From analyse.prisma
+model Analyse {
+  id                   String   @id @default(cuid())
+  zoneId               String
+  nomZone              String?
+  activite             String?
+  scoreTotal           Int?
+  verdict              String?
+  recommandation       String?
+  scoresDetails        Json?
+  pointsForts          Json?
+  pointsFaibles        Json?
+  nbConcurrents        Int?
+  noteMoyConcurrents   Decimal? @db.Decimal(3, 1)
+  nbStationsTransport  Int?
+  nbParkings           Int?
+  scoreAttractivite    Decimal? @db.Decimal(3, 1)
+  dateAnalyse          DateTime @default(now())
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+
+  @@map("analyses")
 }

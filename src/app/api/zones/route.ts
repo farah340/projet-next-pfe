@@ -14,6 +14,13 @@ export async function GET() {
         const zones = await prisma.zone.findMany({
             where: { userId: session.user.id },
             orderBy: { createdAt: 'desc' },
+            include: {
+                activites: {
+                    include: {
+                        typeActivite: true
+                    }
+                }
+            }
         })
 
         return NextResponse.json(zones)

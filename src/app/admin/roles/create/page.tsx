@@ -292,7 +292,7 @@ export default function CreateRolePage() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-[#6c63ff] rounded-lg hover:bg-[#5a51e0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Création...' : 'Créer le rôle'}
           </button>

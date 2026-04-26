@@ -11,7 +11,16 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
         }
 
-        const { id } = await request.json()
+        // Récupérer l'ID soit du body JSON soit des query params
+        let id: string | null = null
+        try {
+            const body = await request.json()
+            id = body.id
+        } catch {
+            // Si pas de body JSON, chercher dans les query params
+            const { searchParams } = new URL(request.url)
+            id = searchParams.get('id')
+        }
 
         if (!id || typeof id !== 'string') {
             return NextResponse.json({ error: 'ID utilisateur requis' }, { status: 400 })

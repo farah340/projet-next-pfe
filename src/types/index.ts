@@ -9,9 +9,10 @@ export interface ZoneResult {
 export interface TypeActivite {
   id: string
   nom: string
-  icone: string | null
-  radius: number
-  categories: Categorie[]
+  emoji?: string
+  icone?: string | null
+  radius?: number
+  categories?: Categorie[]
 }
 
 export interface Categorie {

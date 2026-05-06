@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Ajouter "Tunisie" automatiquement si pas déjà présent
     const query = q.toLowerCase().includes('tunis') ? q : `${q}, Tunisie`
 
     const res = await fetch(

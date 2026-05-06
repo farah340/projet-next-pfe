@@ -4,25 +4,46 @@ import { auth } from '@/lib/auth'
 import prisma from '@/lib/bd'
 
 // ── GET /api/zones  →  lister les zones de l'utilisateur ──
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const session = await auth()
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
         }
-
+ 
+        const { searchParams } = new URL(req.url)
+        const withAnalyses = searchParams.get('withAnalyses') === '1'
+        const activite = searchParams.get('activite')
+ 
+        const analysesFilter =
+            withAnalyses || activite
+                ? { some: activite ? { activite } : {} }
+                : undefined
+ 
         const zones = await prisma.zone.findMany({
-            where: { userId: session.user.id },
+            where: {
+                userId: session.user.id,
+                ...(analysesFilter ? { analyses: analysesFilter } : {}),
+            },
             orderBy: { createdAt: 'desc' },
             include: {
                 activites: {
                     include: {
-                        typeActivite: true
-                    }
-                }
-            }
+                        typeActivite: true,
+                    },
+                },
+                // Récupère la dernière analyse de chaque zone (pour les metrics du front)
+                analyses: {
+                    take: 1,
+                    orderBy: { dateAnalyse: 'desc' },
+                    ...(activite ? { where: { activite } } : {}),
+                },
+                _count: {
+                    select: { analyses: true },
+                },
+            },
         })
-
+ 
         return NextResponse.json(zones)
     } catch (err) {
         console.error(err)

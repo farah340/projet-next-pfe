@@ -136,7 +136,7 @@ export default function ZonesListClient({ zones: initial }: { zones: Zone[] }) {
             <p style={{ color: '#64748b', fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>Gérez et consultez vos zones géographiques analysées</p>
           </div>
           <Link
-            href="/dashboard/map"
+            href="/dashboard/recherche-zone"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: '#6c63ff', color: '#fff',
@@ -209,7 +209,7 @@ export default function ZonesListClient({ zones: initial }: { zones: Zone[] }) {
           </div>
           <p style={{ fontWeight: 600, color: '#0f0f13' }}>Aucune zone trouvée</p>
           <p style={{ color: '#7a7a9a', fontSize: 14, marginTop: 4 }}>Créez votre première zone géographique.</p>
-          <Link href="/dashboard/map" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8, background: '#6c63ff', color: '#fff', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 14px rgba(108,99,255,.3)' }}>
+          <Link href="/dashboard/recherche-zone" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8, background: '#6c63ff', color: '#fff', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: '0 4px 14px rgba(108,99,255,.3)' }}>
             Créer une zone
           </Link>
         </div>

@@ -5,11 +5,14 @@ import Link from 'next/link'
 import ConcurrenceTable from './Concurrencetable'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
 } from 'recharts'
 import type { AnalyseResult } from '@/types/analyse'
-import type { ConcurrentItem as Concurrent } from '@/types/analyse'
 import DemographieTab from './demographietab'
+import ConcurrentsDistanceChart from './Concurrentsdistancechar'
+
+// ── Type pour les onglets (évite l'erreur TS2367) ──────────────────
+type TabKey = 'overview' | 'demo' | 'concurrence' | 'insights'
+
 type Zone = {
   id: string
   nom: string
@@ -20,11 +23,7 @@ type Zone = {
   createdAt: string
 }
 
-
-
-const CHART_COLORS = ['#6c63ff', '#ff6584', '#22c55e', '#f59e0b']
-
-// ── Composant barre de progression ──
+// ── Composant barre de progression ─────────────────────────────────
 function ProgressBar({ value, color = '#6c63ff' }: { value: number; color?: string }) {
   return (
     <div style={{ height: 6, background: '#ebebf0', borderRadius: 99, overflow: 'hidden', marginTop: 6 }}>
@@ -33,7 +32,7 @@ function ProgressBar({ value, color = '#6c63ff' }: { value: number; color?: stri
   )
 }
 
-// ── Tooltip du graphique ──
+// ── Tooltip du graphique d'évolution ───────────────────────────────
 function CustomTooltip({ active, payload, label }: any) {
   if (active && payload?.length) {
     return (
@@ -51,7 +50,7 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
   const [analyse, setAnalyse] = useState<AnalyseResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'overview' | 'demo' | 'concurrence' | 'insights'>('overview')
+  const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [isFav, setIsFav] = useState(false)
 
   useEffect(() => {
@@ -116,8 +115,6 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
     )
   }
 
-  const scoreColor = analyse.scoreGlobal >= 80 ? '#22c55e' : analyse.scoreGlobal >= 65 ? '#6c63ff' : '#f59e0b'
-
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: '#f5f5f8', minHeight: '100vh' }}>
       <style>{`
@@ -160,7 +157,6 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
       </div>
 
       {/* ── Hero Score Banner ── */}
-      {/* ── Hero Score Banner — simplifié ── */}
       <div style={{
         background: 'linear-gradient(135deg, #3730a3 0%, #6c63ff 50%, #a855f7 100%)',
         padding: '32px 40px',
@@ -254,7 +250,9 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
       {/* ── Tab content ── */}
       <div style={{ padding: '32px 40px' }}>
 
+        {/* ───────────────────────────────────────────────────────── */}
         {/* ── Overview tab ── */}
+        {/* ───────────────────────────────────────────────────────── */}
         {activeTab === 'overview' && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
@@ -262,7 +260,7 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
               {/* Évolution score */}
               <div style={{ background: '#fff', border: '1.5px solid #ebebf0', borderRadius: 16, padding: 24 }}>
                 <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 4, color: '#1a1a2e' }}>Évolution du score</h3>
-                <p style={{ color: '#5a5a7a', fontSize: 13, marginBottom: 20, fontWeight: 500 }}>Performance sur les 7 derniers mois</p>
+                <p style={{ color: '#5a5a7a', fontSize: 13, marginBottom: 20, fontWeight: 500 }}>Performance sur les 12 derniers mois</p>
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={Array.isArray(analyse.historiqueScore) ? analyse.historiqueScore : []} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
                     <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#7a7a9a' }} axisLine={false} tickLine={false} />
@@ -273,24 +271,36 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
                 </ResponsiveContainer>
               </div>
 
-              {/* Répartition sectorielle */}
+              {/* Concentration concurrentielle (histogramme par distance) */}
               <div style={{ background: '#fff', border: '1.5px solid #ebebf0', borderRadius: 16, padding: 24 }}>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 4, color: '#1a1a2e' }}>Répartition sectorielle</h3>
-                <p style={{ color: '#5a5a7a', fontSize: 13, marginBottom: 12, fontWeight: 500 }}>Distribution des activités dans la zone</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie data={Array.isArray(analyse.repartitionSectorielle) ? analyse.repartitionSectorielle : []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, value }) => `${name}: ${value}%`} labelLine={true}>
-                      {(Array.isArray(analyse.repartitionSectorielle) ? analyse.repartitionSectorielle : []).map((_, index) => (
-                        <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: any) => `${v}%`} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4, gap: 12 }}>
+                  <div>
+                    <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, marginBottom: 4, color: '#1a1a2e' }}>
+                      Concentration concurrentielle
+                    </h3>
+                    <p style={{ color: '#5a5a7a', fontSize: 13, fontWeight: 500, margin: 0 }}>
+                      {analyse.donnees?.concurrence?.total ?? 0} concurrents répartis par distance
+                    </p>
+                  </div>
+                  {analyse.donnees?.concurrence?.plus_proche_m != null && (
+                    <div style={{
+                      background: '#f5f5f8', borderRadius: 8,
+                      padding: '4px 10px', fontSize: 11, color: '#5a5a7a', fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Plus proche : {Math.round(analyse.donnees.concurrence.plus_proche_m)} m
+                    </div>
+                  )}
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <ConcurrentsDistanceChart
+                    concurrents={analyse.donnees?.concurrence?.concurrents ?? []}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Metrics */}
+            {/* Metrics 3 colonnes */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
               {[
                 {
@@ -335,13 +345,9 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
                 </div>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Densité des activités */}
-        {activeTab === 'overview' && (
-          <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {/* Densité des activités (Types de concurrents + Infrastructure locale) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
               {/* Concurrents par type */}
               {analyse.donnees?.concurrence?.par_type && Object.keys(analyse.donnees.concurrence.par_type).length > 0 && (
                 <div>
@@ -390,16 +396,27 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
           </div>
         )}
 
-        {/* ── Concurrence tab ── ⭐ NOUVEAU ⭐ */}
+        {/* ───────────────────────────────────────────────────────── */}
+        {/* ── Démographie tab ── */}
+        {/* ───────────────────────────────────────────────────────── */}
+        {activeTab === 'demo' && (
+          <DemographieTab analyse={analyse} />
+        )}
+
+        {/* ───────────────────────────────────────────────────────── */}
+        {/* ── Concurrence tab ── ⭐ */}
+        {/* ───────────────────────────────────────────────────────── */}
         {activeTab === 'concurrence' && (
           <ConcurrenceTable
             concurrents={analyse.donnees?.concurrence?.concurrents ?? []}
-            stats={analyse.donnees?.concurrence?.stats}
+            stats={(analyse.donnees?.concurrence as any)?.stats}
             parType={analyse.donnees?.concurrence?.par_type}
           />
         )}
 
+        {/* ───────────────────────────────────────────────────────── */}
         {/* ── Insights tab ── */}
+        {/* ───────────────────────────────────────────────────────── */}
         {activeTab === 'insights' && (
           <div style={{ background: '#fff', border: '1.5px solid #ebebf0', borderRadius: 16, padding: 32 }}>
             <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 20, marginBottom: 6, color: '#1a1a2e' }}>
@@ -411,7 +428,6 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {(Array.isArray(analyse.insights) ? analyse.insights : []).map((insight, i) => {
-                // Compatibilité string et objet
                 if (typeof insight === 'string') {
                   return (
                     <div key={i} style={{ display: 'flex', gap: 14, padding: '16px 20px', background: '#f5f5f8', borderRadius: 12 }}>
@@ -421,7 +437,6 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
                   )
                 }
 
-                // Nouveau format rapport
                 const colors = {
                   opportunite: { bg: '#f0fdf4', border: '#86efac', badge: '#16a34a', dot: '#22c55e' },
                   warning: { bg: '#fffbeb', border: '#fde68a', badge: '#d97706', dot: '#f59e0b' },
@@ -431,7 +446,6 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
 
                 return (
                   <div key={i} style={{ background: c.bg, border: `1.5px solid ${c.border}`, borderRadius: 14, padding: 20 }}>
-                    {/* Header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: c.dot, flexShrink: 0 }} />
                       <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 15, color: '#1a1a2e', flex: 1 }}>
@@ -442,12 +456,10 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
                       </span>
                     </div>
 
-                    {/* Résumé */}
                     <p style={{ fontSize: 14, fontWeight: 600, color: '#2a2a38', margin: '0 0 8px 20px', lineHeight: 1.5 }}>
                       {insight.resume}
                     </p>
 
-                    {/* Détail */}
                     <p style={{ fontSize: 13, color: '#4a4a5a', margin: '0 0 0 20px', lineHeight: 1.7 }}>
                       {insight.detail}
                     </p>
@@ -457,11 +469,7 @@ export default function ZoneAnalysePage({ params }: { params: { id: string } }) 
             </div>
           </div>
         )}
-        {/* ── Démographie tab (placeholder) ── */}
-        {/* ── Démographie tab ── */}
-        {activeTab === 'demo' && (
-          <DemographieTab analyse={analyse} />
-        )}
+
       </div>
     </div>
   )

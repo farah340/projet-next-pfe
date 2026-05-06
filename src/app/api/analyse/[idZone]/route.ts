@@ -159,10 +159,9 @@ export async function POST(
         historiqueScore: safeParse(n8nData.historiqueScore, []),
         repartitionSectorielle: safeParse(n8nData.repartitionSectorielle, []),
 
-        // ✅ Données complètes du Merge (concurrents, transports, infra, attractivité)
+        // ✅ Données complètes du Merge
         donnees: {
           concurrence: n8nData.donnees?.concurrence ? {
-            // Stats résumées
             total: n8nData.donnees.concurrence.total,
             note_moyenne: n8nData.donnees.concurrence.note_moyenne,
             dans_500m: n8nData.donnees.concurrence.dans_500m,
@@ -171,7 +170,6 @@ export async function POST(
             excellents: n8nData.donnees.concurrence.excellents,
             pct_avec_site: n8nData.donnees.concurrence.pct_avec_site,
             pct_avec_reseau_social: n8nData.donnees.concurrence.pct_avec_reseau_social,
-            // ✅ Listes complètes mappées avec liens et présence digitale
             concurrents: (n8nData.donnees.concurrence.concurrents ?? []).map(mapConcurrent),
             top_5_menace: (n8nData.donnees.concurrence.top_5_menace ?? []).map(mapConcurrent),
             top_5_proches: (n8nData.donnees.concurrence.top_5_proches ?? []).map(mapConcurrent),
@@ -188,7 +186,6 @@ export async function POST(
             parkings_count: n8nData.donnees.transports.parkings_count,
             within_500m: n8nData.donnees.transports.within_500m,
             within_1km: n8nData.donnees.transports.within_1km,
-            // ✅ Détails complets
             by_type: n8nData.donnees.transports.by_type ?? {},
             top_5_closest: n8nData.donnees.transports.top_5_closest ?? [],
           } : null,
@@ -197,13 +194,7 @@ export async function POST(
             total: n8nData.donnees.infrastructure.total,
             within_500m: n8nData.donnees.infrastructure.within_500m,
             within_1km: n8nData.donnees.infrastructure.within_1km,
-            commerces: n8nData.donnees.infrastructure.commerces,
-            sante: n8nData.donnees.infrastructure.sante,
-            education: n8nData.donnees.infrastructure.education,
-            services: n8nData.donnees.infrastructure.services,
-            // ✅ Détails complets
             par_categorie: n8nData.donnees.infrastructure.par_categorie ?? {},
-            by_type: n8nData.donnees.infrastructure.by_type ?? {},
             top_5_closest: n8nData.donnees.infrastructure.top_5_closest ?? [],
           } : null,
 
@@ -214,7 +205,6 @@ export async function POST(
             prix_moyen_tnd: n8nData.donnees.attractivite.prix_moyen_tnd,
             niveau_zone: n8nData.donnees.attractivite.niveau_zone,
             score_global: n8nData.donnees.attractivite.score_global,
-            // ✅ Détails complets
             par_categorie: n8nData.donnees.attractivite.par_categorie ?? {},
             indicateurs: n8nData.donnees.attractivite.indicateurs ?? {},
             top_5_attracteurs: n8nData.donnees.attractivite.top_5_attracteurs ?? [],
@@ -253,14 +243,24 @@ export async function POST(
         pointsForts: ['Données mock — relancer l\'analyse'],
         pointsFaibles: [],
         insights: ['Connexion n8n indisponible'],
-        historiqueScore: [
-          { mois: 'Jan', score: 70 }, { mois: 'Fév', score: 72 },
-          { mois: 'Mar', score: 73 }, { mois: 'Avr', score: 75 },
-        ],
+        historiqueScore: (() => {
+          const MOIS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
+                           'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
+          const now = new Date()
+          const arr = []
+          for (let i = 11; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+            arr.push({
+              mois: MOIS_FR[d.getMonth()],
+              score: 60 + Math.round((11 - i) * 1.2),
+            })
+          }
+          return arr
+        })(),
         repartitionSectorielle: Object.entries(parCategorie)
           .map(([name, value]) => ({
             name,
-            value: Math.round((value / lieux.length) * 100)
+            value: Math.round((value / Math.max(lieux.length, 1)) * 100)
           }))
           .sort((a, b) => b.value - a.value),
         donnees: {
@@ -277,29 +277,56 @@ export async function POST(
       }
     }
 
-    // ── Sauvegarde Prisma ──────────────────────────────────────────
-    try {
-      await prisma.analyse.create({
-        data: {
-          zoneId: zone.id,
-          nomZone: zone.nom,
-          activite,
-          scoreTotal: response.scoreGlobal,
-          verdict: response.verdict ?? null,
-          recommandation: response.recommandation ?? null,
-          scoresDetails: response.accessibilite,
-          pointsForts: response.pointsForts,
-          pointsFaibles: response.pointsFaibles,
-          nbConcurrents: response.donnees?.concurrence?.total ?? lieux.length,
-          noteMoyConcurrents: response.donnees?.concurrence?.note_moyenne ?? noteMoyenne ?? 0,
-          nbStationsTransport: response.donnees?.transports?.transports_publics_count ?? 0,
-          nbParkings: response.donnees?.transports?.parkings_count ?? 0,
-          scoreAttractivite: response.attractivite?.fluxPietons ?? 0,
-        },
-      })
-    } catch (dbErr: any) {
-      console.warn('Prisma save failed (non-bloquant):', dbErr.message)
+    // ──────────────────────────────────────────────────────────────
+    // ✅ Sauvegarde Prisma — UPSERT au lieu de CREATE
+    // ──────────────────────────────────────────────────────────────
+    // Au lieu de créer une nouvelle ligne à chaque appel (ce qui causait
+    // des doublons et des incohérences entre les pages), on met à jour
+    // l'analyse existante pour le couple (zoneId, activite). S'il n'y en
+    // a pas, on en crée une seule fois.
+   // ⚠️ Ne sauvegarde PAS en DB si on a utilisé le mock
+// (sinon le mock écraserait les vraies analyses lors d'une panne n8n)
+if (useMock) {
+  console.log('Mock utilisé — pas de sauvegarde DB pour préserver les vraies analyses')
+} else {
+  try {
+    const analyseData = {
+      zoneId: zone.id,
+      nomZone: zone.nom,
+      activite,
+      scoreTotal: response.scoreGlobal,
+      verdict: response.verdict ?? null,
+      recommandation: response.recommandation ?? null,
+      scoresDetails: response.accessibilite,
+      pointsForts: response.pointsForts,
+      pointsFaibles: response.pointsFaibles,
+      nbConcurrents: response.donnees?.concurrence?.total ?? lieux.length,
+      noteMoyConcurrents: response.donnees?.concurrence?.note_moyenne ?? noteMoyenne ?? 0,
+      nbStationsTransport: response.donnees?.transports?.transports_publics_count ?? 0,
+      nbParkings: response.donnees?.transports?.parkings_count ?? 0,
+      scoreAttractivite: response.attractivite?.fluxPietons ?? 0,
+      dateAnalyse: new Date(),
     }
+
+    const existing = await prisma.analyse.findFirst({
+      where: { zoneId: zone.id, activite },
+      orderBy: { dateAnalyse: 'desc' },
+    })
+
+    if (existing) {
+      await prisma.analyse.update({
+        where: { id: existing.id },
+        data: analyseData,
+      })
+      console.log(`✅ Analyse mise à jour : ${zone.nom} / ${activite}`)
+    } else {
+      await prisma.analyse.create({ data: analyseData })
+      console.log(`✅ Analyse créée : ${zone.nom} / ${activite}`)
+    }
+  } catch (dbErr: any) {
+    console.warn('Prisma save failed (non-bloquant):', dbErr.message)
+  }
+}
 
     return NextResponse.json(response)
 

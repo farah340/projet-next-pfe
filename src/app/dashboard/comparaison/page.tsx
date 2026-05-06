@@ -58,17 +58,8 @@ interface TypeActiviteFromAPI {
 // Priorité : analyse récente avec des données valides (concurrents > 0 ou parkings > 0)
 function pickBestAnalyse(analyses?: AnalyseFromAPI[]): AnalyseFromAPI | undefined {
     if (!analyses || analyses.length === 0) return undefined;
-
-    // 1. Cherche une analyse avec des vraies données (pas que des 0)
-    const withData = analyses.find(
-        (a) =>
-            (a.nbConcurrents ?? 0) > 0 ||
-            (a.nbParkings ?? 0) > 0 ||
-            (a.nbStationsTransport ?? 0) > 0
-    );
-    if (withData) return withData;
-
-    // 2. Sinon prend la plus récente (déjà triée DESC par l'API)
+    // Maintenant que l'API garantit une seule analyse par (zone, activite),
+    // on prend simplement la plus récente.
     return analyses[0];
 }
 

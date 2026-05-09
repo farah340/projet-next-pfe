@@ -276,16 +276,6 @@ export async function POST(
         },
       }
     }
-
-    // ──────────────────────────────────────────────────────────────
-    // ✅ Sauvegarde Prisma — UPSERT au lieu de CREATE
-    // ──────────────────────────────────────────────────────────────
-    // Au lieu de créer une nouvelle ligne à chaque appel (ce qui causait
-    // des doublons et des incohérences entre les pages), on met à jour
-    // l'analyse existante pour le couple (zoneId, activite). S'il n'y en
-    // a pas, on en crée une seule fois.
-   // ⚠️ Ne sauvegarde PAS en DB si on a utilisé le mock
-// (sinon le mock écraserait les vraies analyses lors d'une panne n8n)
 if (useMock) {
   console.log('Mock utilisé — pas de sauvegarde DB pour préserver les vraies analyses')
 } else {

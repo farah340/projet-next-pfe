@@ -374,15 +374,7 @@ export default function ComparaisonPage() {
                         </button>
                     )}
 
-                    <button
-                        onClick={handleSave}
-                        disabled={!canCompare}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
-                    >
-                        <Save size={14} />
-                        Sauvegarder
-                    </button>
-                </div>
+                                    </div>
             </div>
 
             <div className="mb-6">

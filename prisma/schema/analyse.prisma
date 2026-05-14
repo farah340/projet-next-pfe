@@ -1,22 +1,23 @@
 model Analyse {
-  id                   String   @id @default(cuid())
-  zoneId               String
-  nomZone              String?
-  activite             String?
-  scoreTotal           Int?
-  verdict              String?
-  recommandation       String?
-  scoresDetails        Json?
-  pointsForts          Json?
-  pointsFaibles        Json?
-  nbConcurrents        Int?
-  noteMoyConcurrents   Decimal? @db.Decimal(3, 1)
-  nbStationsTransport  Int?
-  nbParkings           Int?
-  scoreAttractivite    Decimal? @db.Decimal(3, 1)
-  dateAnalyse          DateTime @default(now())
-
-  zone Zone @relation(fields: [zoneId], references: [id])
+  id                  String   @id @default(cuid())
+  zoneId              String
+  nomZone             String?
+  activite            String?
+  scoreTotal          Int?
+  verdict             String?
+  recommandation      String?
+  scoresDetails       Json?
+  pointsForts         Json?
+  pointsFaibles       Json?
+  nbConcurrents       Int?
+  noteMoyConcurrents  Decimal? @db.Decimal(3, 1)
+  nbStationsTransport Int?
+  nbParkings          Int?
+  scoreAttractivite   Decimal? @db.Decimal(3, 1)
+  donneesCompletes     Json?
+  
+  dateAnalyse         DateTime @default(now())
+  zone                Zone     @relation(fields: [zoneId], references: [id])
 
   @@map("analyses")
 }

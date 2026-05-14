@@ -2,7 +2,6 @@ model Permission {
   id       String     @id @default(cuid())
   resource String
   action   String
-
   roleId   String
   role     CustomRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
 

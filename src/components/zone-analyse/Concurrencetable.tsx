@@ -269,7 +269,7 @@ export default function ConcurrenceTable({ concurrents = [], stats, parType }: P
                       {c.rating != null ? (
                         <div className="flex items-center gap-1.5">
                           <Star size={14} className="fill-amber-400 text-amber-400" />
-                          <span className="font-medium">{c.rating}</span>
+                          <span className="font-medium text-blue-600">{c.rating}</span>
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs font-medium ${rating.className}`}
                           >

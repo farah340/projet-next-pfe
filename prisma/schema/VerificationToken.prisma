@@ -1,5 +1,5 @@
 model VerificationToken {
-  identifier String   // Email de l'utilisateur
+  identifier String
   token      String   @unique
   expires    DateTime
 

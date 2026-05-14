@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { Search, Loader2, BarChart3 } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Search, Loader2 } from 'lucide-react'
 
 import { TypeActivite, Categorie, ZoneResult, Lieu } from '@/types'
 import { useZoneSearch } from '@/Hooks/Usezoneseach'
@@ -15,14 +14,13 @@ import { LieuxGrid } from '@/components/zone_recherche/LieuxGrid'
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
 
 export default function RechercheZonePage() {
-  const router = useRouter()
 
   /* ── Zone search ── */
   const {
     query, setQuery,
     suggestions,
     loading: loadingSearch,
-    showSuggestions, setShowSuggestions,
+    showSuggestions,
     hideSuggestions,
   } = useZoneSearch()
 
@@ -65,7 +63,7 @@ export default function RechercheZonePage() {
       setSelectedType(null)
       return
     }
-    
+
     // Format compatible avec ton type Categorie existant
     setSelectedCategorie({
       id: cat.id,
@@ -74,7 +72,7 @@ export default function RechercheZonePage() {
       keywords: cat.keywords,
       typeActiviteId: cat.type_id,
     })
-    
+
     // Reconstruire le type d'activité depuis les données reçues
     setSelectedType({
       id: cat.type_id,
@@ -96,7 +94,6 @@ export default function RechercheZonePage() {
 
   const canSearch = !!selectedZone && !!selectedCategorie && !loadingLieux
 
-
   /* ── Render ── */
   return (
     <div
@@ -106,47 +103,13 @@ export default function RechercheZonePage() {
 
       {/* ── HEADER ── */}
       <div className="bg-white border-b border-slate-100 px-6 py-5 shadow-sm">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Rechercher une zone
-            </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Trouvez et analysez des zones géographiques pour votre projet
-            </p>
-          </div>
-          {selectedZone && (
-            <button
-              onClick={async () => {
-                // Appeler le webhook n8n
-                try {
-                  await fetch('http://localhost:5678/webhook-test/MarketMap/analyse-zone', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      zoneId: selectedZone.id,
-                      nom: selectedZone.nom,
-                      adresse: selectedZone.adresse,
-                      lat: selectedZone.lat,
-                      lng: selectedZone.lng,
-                      activite: selectedCategorie?.name || selectedType?.nom || 'commerce'
-                    })
-                  })
-                } catch (e) {
-                  console.warn('Webhook n8n non disponible:', e)
-                }
-                // Redirection vers la page d'analyse
-                router.push(
-                  `/dashboard/analyse/${selectedZone.id}` +
-                  `?activite=${encodeURIComponent(selectedCategorie?.name || selectedType?.nom || 'commerce')}`
-                )
-              }}
-              className="flex items-center gap-2 bg-blue-500 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Analyser cette zone
-            </button>
-          )}
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Rechercher une zone
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Trouvez et explorez des zones géographiques. Sauvegardez-les pour lancer l'analyse complète depuis <span className="font-semibold">Mes zones</span>.
+          </p>
         </div>
 
         {/* Search card */}

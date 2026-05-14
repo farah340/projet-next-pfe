@@ -28,6 +28,7 @@ export async function POST(
       return NextResponse.json({ error: 'Zone introuvable' }, { status: 404 })
     }
 
+    // ── Récupération des lieux proches (5 km) ──
     const lieux: any[] = await prisma.$queryRaw`
       SELECT l.categorie, l.types, l.note, l."nbAvis", l.nom, l.lat, l.lng
       FROM "Lieu" l
@@ -51,7 +52,7 @@ export async function POST(
       ? avecNote.reduce((sum, l) => sum + parseFloat(l.note), 0) / avecNote.length
       : null
 
-    // ── Appel n8n ──────────────────────────────────────────────────
+    // ── Appel n8n ──
     const n8nUrl = process.env.N8N_WEBHOOK_URL!
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 60000)
@@ -94,7 +95,7 @@ export async function POST(
     }
     clearTimeout(timeout)
 
-    // ── Construction de la réponse ─────────────────────────────────
+    // ── Construction de la réponse ──
     let response: any
 
     if (!useMock && n8nData) {
@@ -116,18 +117,15 @@ export async function POST(
         is_open_now: c.is_open_now,
         amplitude_horaire_hebdo: c.amplitude_horaire_hebdo,
         jours_ouverts_hebdo: c.jours_ouverts_hebdo,
-        // ✅ Liens directs
         website: c.website ?? null,
         phone: c.phone ?? null,
         google_maps_uri: c.google_maps_uri ?? null,
-        // ✅ Booléens présence digitale
         has_website: c.has_website ?? false,
         has_instagram: c.has_instagram ?? false,
         has_facebook: c.has_facebook ?? false,
         has_phone: c.has_phone ?? false,
       });
 
-      // ✅ Toutes les données viennent directement de n8n
       response = {
         // Scores & metadata
         success: n8nData.success ?? true,
@@ -159,7 +157,7 @@ export async function POST(
         historiqueScore: safeParse(n8nData.historiqueScore, []),
         repartitionSectorielle: safeParse(n8nData.repartitionSectorielle, []),
 
-        // ✅ Données complètes du Merge
+        // Données complètes du Merge n8n
         donnees: {
           concurrence: n8nData.donnees?.concurrence ? {
             total: n8nData.donnees.concurrence.total,
@@ -194,7 +192,12 @@ export async function POST(
             total: n8nData.donnees.infrastructure.total,
             within_500m: n8nData.donnees.infrastructure.within_500m,
             within_1km: n8nData.donnees.infrastructure.within_1km,
+            commerces: n8nData.donnees.infrastructure.commerces,
+            sante: n8nData.donnees.infrastructure.sante,
+            education: n8nData.donnees.infrastructure.education,
+            services: n8nData.donnees.infrastructure.services,
             par_categorie: n8nData.donnees.infrastructure.par_categorie ?? {},
+            by_type: n8nData.donnees.infrastructure.by_type ?? {},
             top_5_closest: n8nData.donnees.infrastructure.top_5_closest ?? [],
           } : null,
 
@@ -222,7 +225,7 @@ export async function POST(
       }
 
     } else {
-      // ── Fallback mock ──────────────────────────────────────────
+      // ── Fallback mock ──
       console.log('Mock utilisé pour:', zone.nom)
       response = {
         success: false,
@@ -243,24 +246,14 @@ export async function POST(
         pointsForts: ['Données mock — relancer l\'analyse'],
         pointsFaibles: [],
         insights: ['Connexion n8n indisponible'],
-        historiqueScore: (() => {
-          const MOIS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-                           'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
-          const now = new Date()
-          const arr = []
-          for (let i = 11; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-            arr.push({
-              mois: MOIS_FR[d.getMonth()],
-              score: 60 + Math.round((11 - i) * 1.2),
-            })
-          }
-          return arr
-        })(),
+        historiqueScore: [
+          { mois: 'Jan', score: 70 }, { mois: 'Fév', score: 72 },
+          { mois: 'Mar', score: 73 }, { mois: 'Avr', score: 75 },
+        ],
         repartitionSectorielle: Object.entries(parCategorie)
           .map(([name, value]) => ({
             name,
-            value: Math.round((value / Math.max(lieux.length, 1)) * 100)
+            value: lieux.length > 0 ? Math.round((value / lieux.length) * 100) : 0
           }))
           .sort((a, b) => b.value - a.value),
         donnees: {
@@ -276,47 +269,30 @@ export async function POST(
         },
       }
     }
-if (useMock) {
-  console.log('Mock utilisé — pas de sauvegarde DB pour préserver les vraies analyses')
-} else {
-  try {
-    const analyseData = {
-      zoneId: zone.id,
-      nomZone: zone.nom,
-      activite,
-      scoreTotal: response.scoreGlobal,
-      verdict: response.verdict ?? null,
-      recommandation: response.recommandation ?? null,
-      scoresDetails: response.accessibilite,
-      pointsForts: response.pointsForts,
-      pointsFaibles: response.pointsFaibles,
-      nbConcurrents: response.donnees?.concurrence?.total ?? lieux.length,
-      noteMoyConcurrents: response.donnees?.concurrence?.note_moyenne ?? noteMoyenne ?? 0,
-      nbStationsTransport: response.donnees?.transports?.transports_publics_count ?? 0,
-      nbParkings: response.donnees?.transports?.parkings_count ?? 0,
-      scoreAttractivite: response.attractivite?.fluxPietons ?? 0,
-      dateAnalyse: new Date(),
-    }
 
-    const existing = await prisma.analyse.findFirst({
-      where: { zoneId: zone.id, activite },
-      orderBy: { dateAnalyse: 'desc' },
-    })
-
-    if (existing) {
-      await prisma.analyse.update({
-        where: { id: existing.id },
-        data: analyseData,
+    // ── Sauvegarde Prisma ──
+    try {
+      await prisma.analyse.create({
+        data: {
+          zoneId: zone.id,
+          nomZone: zone.nom,
+          activite,
+          scoreTotal: response.scoreGlobal,
+          verdict: response.verdict ?? null,
+          recommandation: response.recommandation ?? null,
+          scoresDetails: response.accessibilite,
+          pointsForts: response.pointsForts,
+          pointsFaibles: response.pointsFaibles,
+          nbConcurrents: response.donnees?.concurrence?.total ?? lieux.length,
+          noteMoyConcurrents: response.donnees?.concurrence?.note_moyenne ?? noteMoyenne ?? 0,
+          nbStationsTransport: response.donnees?.transports?.transports_publics_count ?? 0,
+          nbParkings: response.donnees?.transports?.parkings_count ?? 0,
+          scoreAttractivite: response.attractivite?.fluxPietons ?? 0,
+        },
       })
-      console.log(`✅ Analyse mise à jour : ${zone.nom} / ${activite}`)
-    } else {
-      await prisma.analyse.create({ data: analyseData })
-      console.log(`✅ Analyse créée : ${zone.nom} / ${activite}`)
+    } catch (dbErr: any) {
+      console.warn('Prisma save failed (non-bloquant):', dbErr.message)
     }
-  } catch (dbErr: any) {
-    console.warn('Prisma save failed (non-bloquant):', dbErr.message)
-  }
-}
 
     return NextResponse.json(response)
 

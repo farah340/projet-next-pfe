@@ -1,21 +1,16 @@
 model Zone {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   nom         String
   description String?
-
-  // Données géographiques
-  adresse     String   // Nom affiché de la ville/région
+  adresse     String
   lat         Float
   lng         Float
-  geojson     Json?    // Frontières officielles GeoJSON
-
-
-
+  geojson     Json?
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   lieux       Lieu[]
-  activites   ZoneActivite[] 
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activites   ZoneActivite[]
   analyses    Analyse[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }

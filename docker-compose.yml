@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: marketmap
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: marketmap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketmap"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "AIzaSyCL4cCNTEXNQRW0mlTid4-jaqrGqqYCnBs"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://marketmap:changeme@db:5432/marketmap"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "t5D5KPw1JQ+HDKuQ/7IjupIWdnpmxF/YMLFzLoAs3jU="
+      AUTH_SECRET: "t5D5KPw1JQ+HDKuQ/7IjupIWdnpmxF/YMLFzLoAs3jU="
+      AUTH_TRUST_HOST: "true"
+      N8N_WEBHOOK_URL: "http://host.docker.internal:5678/webhook-test/MarketMap/analyse-zone"
+      N8N_COMPARISON_WEBHOOK_URL: "http://host.docker.internal:5678/webhook-test/comparison"
+      NODE_ENV: production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

@@ -1,25 +1,17 @@
 model Lieu {
-  id          String   @id @default(cuid())
-
-  // Identifiant Google Maps (évite les doublons)
-  placeId     String   @unique
-
-  nom         String
-  adresse     String
-  lat         Float
-  lng         Float
-
-
-  note        Float?
-  nbAvis      Int      @default(0)
-  
-  types       String 
-  categorie   String?   
-  statut      String   @default("OPERATIONAL")
-
-  zoneId      String
-  zone        Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
-
-  collecteLe  DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  placeId    String   @unique
+  nom        String
+  adresse    String
+  lat        Float
+  lng        Float
+  note       Float?
+  nbAvis     Int      @default(0)
+  types      String
+  statut     String   @default("OPERATIONAL")
+  zoneId     String
+  collecteLe DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  categorie  String?
+  zone       Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
 }

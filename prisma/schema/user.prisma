@@ -1,22 +1,21 @@
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  nom       String
-  password  String
-  telephone String?
-  role      Role     @default(USER)
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String
+  role          Role        @default(USER)
+  createdAt     DateTime    @default(now())
+  nom           String
   emailVerified DateTime?
+  telephone     String?
+  updatedAt     DateTime    @default(now()) @updatedAt
+  firstLogin    Boolean     @default(true)
+  lastLogin     DateTime?   @default(now())
   customRoleId  String?
-  customRole    CustomRole? @relation(fields: [customRoleId], references: [id])
-
-  firstLogin    Boolean   @default(true)
-  lastLogin     DateTime? @default(now())
   sessions      Session[]
+  customRole    CustomRole? @relation(fields: [customRoleId], references: [id])
   zones         Zone[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
 }
+
 enum Role {
   ADMIN
   USER

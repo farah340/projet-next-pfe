@@ -1,16 +1,11 @@
 model TypeActivite {
-  id          String   @id @default(cuid())
-  nom         String    
-
-   
-  radius       Int      @default(1500)   
-  actif        Boolean  @default(true) 
-
-  icone       String?  
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  zones       ZoneActivite[]
-  categories  Categorie[]
+  id         String         @id @default(cuid())
+  nom        String
+  icone      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  actif      Boolean        @default(true)
+  radius     Int            @default(1500)
+  categories Categorie[]
+  zones      ZoneActivite[]
 }

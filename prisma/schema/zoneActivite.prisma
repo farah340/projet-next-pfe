@@ -1,13 +1,10 @@
 model ZoneActivite {
-  id               String       @id @default(cuid())
-  
-  zoneId           String
-  zone             Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
-  
-  typeActiviteId   String
-  typeActivite     TypeActivite @relation(fields: [typeActiviteId], references: [id], onDelete: Cascade)
-
-  createdAt        DateTime     @default(now())
+  id             String       @id @default(cuid())
+  zoneId         String
+  typeActiviteId String
+  createdAt      DateTime     @default(now())
+  typeActivite   TypeActivite @relation(fields: [typeActiviteId], references: [id], onDelete: Cascade)
+  zone           Zone         @relation(fields: [zoneId], references: [id], onDelete: Cascade)
 
   @@unique([zoneId, typeActiviteId])
 }

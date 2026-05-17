@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
             sin(radians(${latNum})) * sin(radians(l.lat))
           )
         )
-      ) <= 5000
-      ORDER BY l."collecteLe" DESC
+      ) <= 1500
+      ORDER BY distance ASC
       LIMIT 200
     `
 
@@ -67,34 +67,31 @@ export async function GET(req: NextRequest) {
       : tousLesLieux
 
     // 4. Si aucun lieu → déclencher N8N avec google_type (English) au lieu de categorie.name (French)
-    if (lieuxFiltres.length === 0 && categorieId) {
-      console.log('🚀 N8N WEBHOOK - Collecte déclenchée:', { latNum, lngNum, categorieId, googleType })
+   if (lieuxFiltres.length <= 10 && categorieId) {
+  console.log('🚀 N8N WEBHOOK - Collecte déclenchée:', { latNum, lngNum, categorieId, googleType })
 
-      fetch('http://localhost:5678/webhook/marketmap/collecte-zones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lat: latNum,
-          lng: lngNum,
-          categorieId,
-          categorie: googleType ?? 'restaurant', // Utilise google_type (English) pour Google Places API
-          google_type: googleType ?? 'restaurant',
-          nomZone: searchParams.get('nomZone') ?? '',
-        })
-      }).catch(err => console.error('❌ N8N WEBHOOK ERROR:', err.message))
-
-      return NextResponse.json({
-        lieux: [],
-        collecteEnCours: true,
-        message: 'Collecte en cours, réessayez dans 30 secondes'
-      })
-    }
-
-    return NextResponse.json({
-      lieux: lieuxFiltres,
-      collecteEnCours: false,
-      total: lieuxFiltres.length
+  fetch(process.env.N8N_WEBHOOK_URL_COLLECTE!, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      lat: latNum,
+      lng: lngNum,
+      categorieId,
+      categorie: googleType ?? 'restaurant',
+      google_type: googleType ?? 'restaurant',
+      nomZone: searchParams.get('nomZone') ?? '',
     })
+  }).catch(err => console.error('❌ N8N WEBHOOK ERROR:', err.message))
+
+  return NextResponse.json({
+    lieux: lieuxFiltres,          // ← on renvoie les lieux existants, pas []
+    collecteEnCours: true,
+    total: lieuxFiltres.length,
+    message: lieuxFiltres.length === 0
+      ? 'Collecte en cours, réessayez dans 30 secondes'
+      : 'Quelques lieux trouvés, collecte complémentaire en cours...'
+  })
+}
 
   } catch (error) {
     console.error('Erreur lieux:', error)
